@@ -1,35 +1,62 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SP-404MKII Cheat Sheets</title>
 <meta name="description" content="Searchable cheat sheets for the Roland SP-404MKII: stock OS v4.00 and DOOM OS 0.7.">
-<meta name="theme-color" content="#282a36">
+<meta name="theme-color" content="#161617">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="top">
-  <div class="bar">
-    <h1>SP-404<span>MKII</span></h1>
-    <div class="seg" id="guideSeg" role="tablist" aria-label="Guide"></div>
-    <button id="themeBtn" class="ico" aria-label="Toggle light/dark theme" title="Theme"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
-  </div>
-  <div class="bar search">
-    <input id="q" type="search" placeholder="Search: e.g. resample, bounce, 16 velocity…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search">
-    <label class="both"><input type="checkbox" id="both"> both guides</label>
-  </div>
-  <div id="pills" class="pills"></div>
-  <nav id="tabs" class="tabs" aria-label="Sections"></nav>
-</header>
-<main id="main"></main>
-<footer class="foot">
-  Unofficial. Compiled from Roland’s SP-404MK2 Reference Manual &amp; v4.00 shortcut list, and the Klangfeld Labs DOOM OS 0.7 manual.
-  Community extras credit <a href="https://vultilion.github.io/sp404mk2-cheatsheet/">vultilion</a> (CC BY-NC 4.0). Not affiliated with Roland or Klangfeld Labs. Diagrams are schematic.
-</footer>
+<svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="m-hold" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="8" r="2.6" fill="currentColor"/></symbol>
+  <symbol id="m-press" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.4" fill="currentColor"/></symbol>
+  <symbol id="m-turn" viewBox="0 0 16 16"><path d="M3.2 10.6A5.4 5.4 0 1 1 12.8 10.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12.8 6.8v3.9H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+<a class="skip" href="#main">Skip to shortcuts</a>
+<div class="shell">
+  <aside class="deck" id="deck">
+    <div class="head">
+      <h1 class="brand">SP-404MKII <span>cheat sheets</span></h1>
+      <div class="seg" id="guideSeg" role="group" aria-label="Guide"></div>
+      <button id="themeBtn" class="ibtn" type="button" aria-label="Switch to light theme" aria-pressed="false"><svg aria-hidden="true"><use href="#i-theme"/></svg></button>
+    </div>
+    <div class="find">
+      <input id="q" type="search" placeholder="Search shortcuts: tempo, resample, copy…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search shortcuts">
+    </div>
+    <div class="board" id="board">
+      <button class="thumb" id="thumb" type="button" aria-expanded="false" aria-controls="board" aria-label="Open the panel to filter by control"><span id="mapThumb"></span><span class="tip" aria-hidden="true">Filter</span><svg class="xp" aria-hidden="true"><use href="#i-expand"/></svg></button>
+      <div class="map" id="map"></div>
+      <div class="lit" id="lit"></div>
+    </div>
+    <div class="controls" id="controls">
+      <label class="sel"><span class="vh">Section</span><select id="secSel"></select></label>
+      <div class="seg mode" role="group" aria-label="Entry view">
+        <button type="button" data-mode="dia" aria-pressed="true">Diagrams</button>
+        <button type="button" data-mode="text" aria-pressed="false">Text</button>
+      </div>
+      <button type="button" class="tgl" id="bothBtn" aria-pressed="false">Both OS</button>
+    </div>
+  </aside>
+  <main id="main" tabindex="-1">
+    <p id="count" class="count" aria-live="polite"></p>
+    <div id="list"></div>
+    <footer class="foot">
+      Unofficial. Compiled from Roland’s SP-404MK2 Reference Manual &amp; v4.00 shortcut list, and the Klangfeld Labs DOOM OS 0.7 manual.
+      Community extras credit <a href="https://vultilion.github.io/sp404mk2-cheatsheet/">vultilion</a> (CC BY-NC 4.0). Not affiliated with Roland or Klangfeld Labs. Diagrams are schematic.
+    </footer>
+  </main>
+</div>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
