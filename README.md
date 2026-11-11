@@ -23,4 +23,4 @@ See `handoff.md` for how it all works and what to watch for.
 ## Credits and licence notes
 Unofficial; not affiliated with Roland or Klangfeld Labs. Sources: Roland SP-404MK2 Reference Manual and v4.00 shortcut list
 (static.roland.com), Klangfeld Labs DOOM OS 0.7 manual. Community extras on the stock guide are from vultilion's sheet
-(https://vultilion.github.io/sp404mk2-cheatsheet/, CC BY-NC 4.0), so keep the project non-commercial and keep the credit.
+(https://vultilion.github.io/sp404mk2-cheatsheet/, CC BY-NC 4.0).
