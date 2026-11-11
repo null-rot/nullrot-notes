@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+build/
+.DS_Store
+
+# AI assistant / editor tooling (local only, never synced)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.mcp.json
