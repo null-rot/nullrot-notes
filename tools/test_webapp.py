@@ -1,7 +1,8 @@
 import sys, json
 from playwright.sync_api import sync_playwright
+import browser
 with sync_playwright() as p:
-    b = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
+    b = browser.launch(p)
     # icons
     pg = b.new_page(viewport={'width':512,'height':512})
     pg.goto('http://localhost:8765/icon.svg'); pg.screenshot(path='../docs/icon-512.png')

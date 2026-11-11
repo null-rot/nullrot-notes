@@ -1,6 +1,7 @@
 import sys, re, subprocess
 sys.path.insert(0, '.')
 from playwright.sync_api import sync_playwright
+import browser
 
 def load(kind):
     """exec the booklet source up to the page assembly; return (inner pages, css, chips, disp)"""
@@ -60,8 +61,8 @@ def build(kind, out_html, foot, pad_to):
 
 def render(html, pdf):
     with sync_playwright() as p:
-        b = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])
-        pg = b.new_page(); import os; pg.goto('file://' + os.path.abspath(html)); pg.wait_for_timeout(500)
+        b = browser.launch(p)
+        pg = b.new_page(); import os; pg.goto(browser.file_url(html)); pg.wait_for_timeout(500)
         pg.pdf(path=pdf, prefer_css_page_size=True, print_background=True)
         b.close()
 

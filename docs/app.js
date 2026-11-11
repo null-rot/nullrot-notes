@@ -216,7 +216,7 @@ function renderEntry(e, g) {
   }
   if (e.type === 'pads') {
     const cells = e.labels.map((t, i) => `<button type="button" class="pc${e.used.includes(i + 1) ? ' u' : ''}" data-k="pad ${i + 1}"><b>${i + 1}</b><span>${t}</span></button>`).join('');
-    return `<section class="pads"><h3 class="t"><span class="pos">${e._pos}</span> ${e.title}</h3><div class="padgrid">${cells}</div><p class="cb">${e.used.length ? 'Blue numbers = pads DOOM OS refers to. ' : ''}Orange labels are Roland’s printed SHIFT functions. Tap a pad to filter.</p></section>`;
+    return `<section class="pads"><h3 class="t"><span class="pos">${e._pos}</span> ${e.title}</h3><div class="padgrid">${cells}</div><p class="cb">${e.used.length ? 'Underlined numbers = pads DOOM OS refers to. ' : ''}Orange labels are Roland’s printed SHIFT functions. Tap a pad to filter.</p></section>`;
   }
   return `<section class="note"><h3 class="t">${e.title}</h3><div class="cb">${chips(e.body)}</div></section>`;
 }
