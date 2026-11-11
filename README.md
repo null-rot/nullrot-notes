@@ -18,7 +18,6 @@ Settings > Pages > Deploy from branch > `main` / `/docs`.
 pip install -r requirements.txt && playwright install chromium   # or have google-chrome at /usr/bin/google-chrome
 ./build.sh
 ```
-See `handoff.md` for how it all works and what to watch for.
 
 ## Credits and licence notes
 Unofficial; not affiliated with Roland or Klangfeld Labs. Sources: Roland SP-404MK2 Reference Manual and v4.00 shortcut list
