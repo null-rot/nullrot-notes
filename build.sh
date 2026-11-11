@@ -12,7 +12,7 @@ python3 book_stock.py
 python3 topdf.py ../build/doom-os-cheat-sheet.html ../pdf/doom-os-sp-404mk2-cheat-sheet.pdf
 python3 topdf.py ../build/sp404mk2-stock-cheat-sheet.html ../pdf/sp-404mk2-stock-os-cheat-sheet.pdf
 
-# 2. dark (Dracula) A4 for screens
+# 2. dark (hardware palette, matches the web app) A4 for screens
 python3 make_dark.py doom doom-os-dark
 python3 make_dark.py stock stock-os-dark
 python3 topdf.py ../build/doom-os-dark.html ../pdf/doom-os-sp-404mk2-cheat-sheet-dark.pdf

@@ -7,7 +7,7 @@ Printable, foldable, dark-mode and searchable web cheat sheets for the Roland SP
 |---|---|
 | Web app (GitHub Pages, installable, offline) | `docs/` |
 | A4 booklets (light, print) | `pdf/*-cheat-sheet.pdf` |
-| A4 booklets (Dracula dark, on-screen) | `pdf/*-cheat-sheet-dark.pdf` |
+| A4 booklets (dark hardware palette, on-screen) | `pdf/*-cheat-sheet-dark.pdf` |
 | Foldable A4-landscape booklets (print duplex, fold in half) | `pdf/*-foldable-booklet.pdf` |
 
 ## Publish the web app

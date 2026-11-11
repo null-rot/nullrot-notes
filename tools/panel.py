@@ -1,18 +1,20 @@
 # Vector schematic of the Roland SP-404MKII top panel (not to scale).
 # Layout verified against Roland's SP-404MK2 Reference Manual panel photos.
-LIGHT = dict(bg="#fff", body="#EDEBE4", bodystroke="#222", disp="#1b1b1d", dispstroke="#000", dispfg="#fff", dispsub="#ddd",
-  btn="#fff", stroke="#111", hlstroke="#111", hlring="#111", txt="#111", hltxt="#111", shbar="#E8590C", shtxt="#fff",
-  badge="#111", badgest="#fff", badgetxt="#fff",
-  role={"hold": ("#FFB703", "#7a4a00"), "press": ("#8ECAE6", "#12506b"), "turn": ("#95D5B2", "#1b5e3a")})
-DRACULA = dict(bg="#282a36", body="#343746", bodystroke="#6272a4", disp="#1e1f29", dispstroke="#6272a4", dispfg="#f8f8f2", dispsub="#bd93f9",
-  btn="#44475a", stroke="#6272a4", hlstroke="#f8f8f2", hlring="#282a36", txt="#f8f8f2", hltxt="#282a36", shbar="#ffb86c", shtxt="#282a36",
-  badge="#ff79c6", badgest="#282a36", badgetxt="#282a36",
-  role={"hold": ("#ffb86c", "#282a36"), "press": ("#8be9fd", "#282a36"), "turn": ("#50fa7b", "#282a36")})
+# Print theme: paper panel (ink-light) with the web app's LED role colours as tints, Roland orange for SHIFT.
+LIGHT = dict(bg="#fff", body="#EFECE4", bodystroke="#161617", disp="#161617", dispstroke="#000", dispfg="#ECE8DF", dispsub="#CFC9BB",
+  btn="#fff", stroke="#161617", hlstroke="#161617", hlring="#161617", txt="#161617", hltxt="#161617", shbar="#F26A1B", shtxt="#161617",
+  badge="#161617", badgest="#fff", badgetxt="#fff",
+  role={"hold": ("#FFB8D9", "#161617"), "press": ("#B5EBFF", "#161617"), "turn": ("#B8F5CD", "#161617")})
+# Screen theme: the web app's hardware panel (charcoal body, ivory print, pad-LED roles).
+HARDWARE = dict(bg="#1E1E20", body="#121213", bodystroke="#38383E", disp="#0A0A0B", dispstroke="#38383E", dispfg="#ECE8DF", dispsub="#AAA59B",
+  btn="#2A2A2E", stroke="#47474E", hlstroke="#ECE8DF", hlring="#121213", txt="#ECE8DF", hltxt="#111", shbar="#F26A1B", shtxt="#111",
+  badge="#ECE8DF", badgest="#121213", badgetxt="#111",
+  role={"hold": ("#FF4FA3", "#111"), "press": ("#38D1FF", "#111"), "turn": ("#4CF28A", "#111")})
 T = LIGHT
 ROLE = T["role"]
 def set_theme(name):
     global T, ROLE
-    T = DRACULA if name == "dracula" else LIGHT
+    T = HARDWARE if name in ("hardware", "dark") else LIGHT
     ROLE = T["role"]
 
 def build_elems():
@@ -147,4 +149,4 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
         parts.append("".join(g))
     vb = f"{x} {y} {w} {h}"
     wh = f' width="{width_mm}mm"' if width_mm else ""
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}"{wh} role="img" aria-label="{aria}" font-family="Inter, Helvetica, Arial, sans-serif">' + "".join(parts) + "</svg>"
+    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}"{wh} role="img" aria-label="{aria}" font-family="Barlow, Inter, Helvetica, Arial, sans-serif">' + "".join(parts) + "</svg>"

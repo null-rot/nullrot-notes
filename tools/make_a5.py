@@ -21,8 +21,8 @@ def load(kind):
 
 A5CSS = '''
 @page { size: 148mm 210mm; margin: 8mm 8mm 12mm;
-  @bottom-left { content: "@@FOOT@@"; font: 5.8pt Inter, sans-serif; color:#444 }
-  @bottom-right { content: counter(page); font: 700 8pt Inter, sans-serif; color:#111 } }
+  @bottom-left { content: "@@FOOT@@"; font: 5.8pt Barlow, Inter, sans-serif; color:#444 }
+  @bottom-right { content: counter(page); font: 700 8.5pt "Barlow Condensed", Barlow, sans-serif; color:#111 } }
 html,body { font-size: 8.4pt }
 .sec { break-before: auto; margin-top: 4mm }
 .sec:first-child { margin-top: 0 }
