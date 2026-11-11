@@ -75,6 +75,7 @@ def text_lines(label, cx, cy, size, fill, weight=700):
     return "".join(out)
 
 DISP_SUB = "DOOM OS grid"
+BADGE_R = 12                       # step badge radius (viewBox units)
 
 def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, disp_sub=None, shift_labels=True, show_all_labels=True, aria="SP-404MKII panel diagram"):
     """hl: dict id -> (role, order or None). roles: hold/press/turn"""
@@ -89,6 +90,7 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
         x, y, w, h = CROPS[crop]
     dim = bool(hl)
     parts = []
+    badges = []
     parts.append(f'<rect x="{x-20}" y="{y-20}" width="{w+40}" height="{h+40}" fill="{T['bg']}"/>')
     # body
     parts.append(f'<rect x="52" y="4" width="896" height="738" rx="26" fill="{T['body']}" stroke="{T['bodystroke']}" stroke-width="3"/>')
@@ -142,11 +144,15 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
                 g.append(f'<rect x="{cx-ew/2+8}" y="{cy+eh/2-23}" width="{ew-16}" height="17" rx="3" fill="{T['shbar']}"/>')
                 g.append(f'<text x="{cx}" y="{cy+eh/2-10}" text-anchor="middle" font-size="{12.5*fs}" font-weight="800" fill="{T['shtxt']}" letter-spacing=".3">{sub}</text>')
         if role and role[1]:
-            bx, by = cx - ew / 2 + 2, cy - eh / 2 + 2
-            g.append(f'<circle cx="{bx}" cy="{by}" r="12" fill="{T['badge']}" stroke="{T['badgest']}" stroke-width="2"/>')
-            g.append(f'<text x="{bx}" y="{by+5}" text-anchor="middle" font-size="15" font-weight="800" fill="{T['badgetxt']}">{role[1]}</text>')
+            # shifted left of the corner so it clears the label; same height as before so crops
+            # (and page layout) are unchanged; drawn last so nothing covers it
+            bx = cx - ew / 2 - (0 if kind == "knob" else BADGE_R * 0.55)
+            by = cy - eh / 2 + 2
+            badges.append(f'<circle cx="{bx:.1f}" cy="{by:.1f}" r="{BADGE_R}" fill="{T['badge']}" stroke="{T['badgest']}" stroke-width="2.5"/>'
+                          f'<text x="{bx:.1f}" y="{by + BADGE_R*0.42:.1f}" text-anchor="middle" font-size="{BADGE_R*1.25:.1f}" font-weight="800" fill="{T['badgetxt']}">{role[1]}</text>')
         g.append("</g>")
         parts.append("".join(g))
+    parts.extend(badges)
     vb = f"{x} {y} {w} {h}"
     wh = f' width="{width_mm}mm"' if width_mm else ""
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}"{wh} role="img" aria-label="{aria}" font-family="Barlow, Inter, Helvetica, Arial, sans-serif">' + "".join(parts) + "</svg>"
