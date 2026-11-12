@@ -48,6 +48,6 @@ if __name__ == '__main__':
     ids = sys.argv[1:] or devices.all_ids()
     for dev in ids:
         build_device(dev)
-    # web app data (single device for now; the web app gets a device switcher in the next step)
-    run('extract.py', ids[0])
+    # web app data covers every device, even when only some PDFs were rebuilt
+    run('extract.py', *devices.all_ids())
     print('done: pdf/ and docs/data.js updated')

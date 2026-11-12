@@ -1,17 +1,24 @@
 (() => {
 'use strict';
 const D = window.DATA;
-const ELEMS = D.elems, CROPS = D.crops;
+const DEVS = D.devices;
+/* the active device: its panel geometry and control lookups (rebuilt by setDevice) */
+let DEV, ELEMS, CROPS, ELBYNORM, ELLABEL, ELKIND;
 const $ = (s, r = document) => r.querySelector(s);
 const tmp = document.createElement('div');
 const dec = h => { tmp.innerHTML = h; return tmp.textContent; };
 const norm = s => dec(String(s)).toUpperCase().replace(/[\s ]+/g, '');
 const attr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 const chips = s => s.replace(/\[\[(.+?)\]\]/g, (m, k) => `<b class="k" tabindex="-1" data-k="${attr(k)}">${k}</b>`);
-const ELBYNORM = {};
-ELEMS.forEach(e => { const l = e.kind === 'pad' ? 'PAD' + e.label : norm(e.label); ELBYNORM[l] = e.id; });
-const ELLABEL = {}; ELEMS.forEach(e => ELLABEL[e.id] = e.kind === 'pad' ? 'pad ' + e.label : e.label.replace(/\n/g, ' '));
-const ELKIND = {}; ELEMS.forEach(e => ELKIND[e.id] = e.kind);
+function setDevice(d) {
+  DEV = d; ELEMS = d.elems; CROPS = d.crops; ELBYNORM = {}; ELLABEL = {}; ELKIND = {};
+  ELEMS.forEach(e => {
+    ELBYNORM[e.kind === 'pad' ? 'PAD' + e.label : norm(e.label)] = e.id;
+    ELLABEL[e.id] = e.kind === 'pad' ? 'pad ' + e.label : e.label.replace(/\n/g, ' ');
+    ELKIND[e.id] = e.kind;
+  });
+  document.documentElement.dataset.device = d.id;   /* hook for per-device palette overrides in styles.css */
+}
 const idFor = t => ELBYNORM[norm(t)] || (/^pad \d+$/i.test(t) ? 'p' + t.split(' ')[1] : null);
 const LETTERS = 'ABCDEFGHIJ';
 
@@ -37,8 +44,8 @@ function panelSVG(hl, crop, o = {}) {
     const mg = { btn: 10, pad: 10, pad2: 10, knob: 18, disp: 12 };
     const ys = ELEMS.filter(e => hl[e.id]).map(e => [e.cy - e.h / 2 - Math.max(mg[e.kind], hl[e.id][1] && o.badge !== 0 ? 30 : 0), e.cy + e.h / 2 + mg[e.kind]]);
     if (!ys.length) return '';
-    const y0 = Math.max(0, Math.min(...ys.map(a => a[0]))), y1 = Math.min(750, Math.max(...ys.map(a => a[1])));
-    x = 60; y = y0; w = 880; h = Math.max(y1 - y0, 80);
+    const y0 = Math.max(0, Math.min(...ys.map(a => a[0]))), y1 = Math.min(DEV.viewH, Math.max(...ys.map(a => a[1])));
+    x = DEV.autoX[0]; y = y0; w = DEV.autoX[1]; h = Math.max(y1 - y0, 80);
   } else {
     [x, y, w, h] = CROPS[crop];
     if (crop !== 'all') {
@@ -50,7 +57,8 @@ function panelSVG(hl, crop, o = {}) {
   const dim = Object.keys(hl).length > 0;
   const P = [];
   P.push(`<rect x="${x - 20}" y="${y - 20}" width="${w + 40}" height="${h + 40}" ${st('var(--pbg)')}/>`);
-  P.push(`<rect x="52" y="4" width="896" height="738" rx="26" ${st('var(--pbody)', 'var(--pbodystroke)', 3)}/>`);
+  const [bx0, by0, bw0, bh0, br0] = DEV.body;
+  P.push(`<rect x="${bx0}" y="${by0}" width="${bw0}" height="${bh0}" rx="${br0}" ${st('var(--pbody)', 'var(--pbodystroke)', 3)}/>`);
   const badges = [];
   for (const e of ELEMS) {
     const role = hl[e.id], r = role ? role[0] : null;
@@ -68,7 +76,7 @@ function panelSVG(hl, crop, o = {}) {
       g.push(`<circle cx="${cx}" cy="${cy}" r="${ew * 0.62}" ${st(fill, stroke, r ? 4 : 2.5)}/>`);
       g.push(`<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - ew * 0.55}" style="stroke:${r ? 'var(--phlring)' : 'var(--ptxt)'};stroke-width:3.5;stroke-linecap:round"/>`);
       if (r === 'turn') g.push(`<path d="M${cx - ew * 0.95} ${cy + ew * 0.35} A ${ew} ${ew} 0 1 1 ${cx + ew * 0.95} ${cy + ew * 0.35}" style="fill:none;stroke:var(--lturn);stroke-width:4;stroke-linecap:round"/>`);
-      const right = ['vol', 'c1', 'c2', 'c3'].includes(e.id);
+      const right = DEV.labelRight.includes(e.id);
       g.push(`<text x="${right ? cx + ew * 0.62 + 14 : cx - ew * 0.62 - 14}" y="${cy + 6}"${right ? '' : ' text-anchor="end"'} font-size="17" font-weight="800" ${tf('var(--ptxt)')}>${lab}</text>`);
     } else if (e.kind === 'btn') {
       g.push(`<rect x="${cx - ew / 2}" y="${cy - eh / 2}" width="${ew}" height="${eh}" rx="7" ${st(fill, stroke, r === 'hold' ? 4 : r ? 3 : 2)}/>`);
@@ -96,8 +104,8 @@ function panelSVG(hl, crop, o = {}) {
     }
   }
   P.push(badges.join(''));
-  const vbw = w, wpct = Math.min(100, vbw / 880 * 100).toFixed(2);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" style="width:${o.fill ? 100 : wpct}%" role="img" aria-label="${attr(o.aria || 'SP-404MKII panel')}" font-family="Barlow,Inter,Helvetica,Arial,sans-serif">${P.join('')}</svg>`;
+  const vbw = w, wpct = Math.min(100, vbw / DEV.autoX[1] * 100).toFixed(2);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" style="width:${o.fill ? 100 : wpct}%" role="img" aria-label="${attr(o.aria || DEV.name + ' panel')}" font-family="Barlow,Inter,Helvetica,Arial,sans-serif">${P.join('')}</svg>`;
 }
 
 /* ---------- derive a diagram from a row's [[chips]] ---------- */
@@ -113,8 +121,7 @@ function rowHL(input) {
 }
 
 /* ---------- index ---------- */
-const GUIDES = D.guides;
-GUIDES.forEach(g => g.sections.forEach(s => {
+DEVS.forEach(d => { setDevice(d); d.guides.forEach(g => g.sections.forEach(s => {
   s.name = dec(s.title); s.letter = LETTERS[s.n - 1];
   let i = 0;
   s.entries.forEach(e => {
@@ -132,25 +139,28 @@ GUIDES.forEach(g => g.sections.forEach(s => {
       r._hl = rowHL(r.input || '');
     });
   });
-}));
+})); });
+const guides = () => DEV.guides;
 
 /* ---------- state ---------- */
-const S = { g: GUIDES[0].id, s: 'all', q: '', key: null, both: false, mode: 'dia', open: false };
+const S = { d: DEVS[0].id, g: DEVS[0].guides[0].id, s: 'all', q: '', key: null, both: false, mode: 'dia', open: false };
 try { if (localStorage.getItem('sp404-mode') === 'text') S.mode = 'text'; } catch (_) {}
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
-  if (GUIDES.some(g => g.id === p.get('g'))) S.g = p.get('g');
+  const d = DEVS.find(x => x.id === p.get('d')) || DEVS.find(x => x.id === S.d) || DEVS[0];
+  S.d = d.id; setDevice(d);
+  S.g = d.guides.some(g => g.id === p.get('g')) ? p.get('g') : d.guides.some(g => g.id === S.g) ? S.g : d.guides[0].id;
   S.s = p.get('s') && p.get('s') !== 'all' ? +p.get('s') : 'all';
   S.q = p.get('q') || ''; S.both = p.get('b') === '1';
   const k = p.get('k'); S.key = k ? { text: k, id: idFor(k) } : null;
 }
 function writeHash() {
-  const p = new URLSearchParams({ g: S.g, s: S.s });
+  const p = new URLSearchParams({ d: S.d, g: S.g, s: S.s });
   if (S.q) p.set('q', S.q); if (S.key) p.set('k', S.key.text); if (S.both) p.set('b', '1');
   history.replaceState(null, '', '#' + p.toString());
 }
-const guide = () => GUIDES.find(g => g.id === S.g);
-const dispSub = g => g.id === 'doom' ? 'DOOM OS grid' : '';
+const guide = () => guides().find(g => g.id === S.g);
+const dispSub = g => g.dispSub || '';
 
 /* ---------- matching ---------- */
 const tokens = () => S.q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -216,7 +226,7 @@ function renderEntry(e, g) {
   }
   if (e.type === 'pads') {
     const cells = e.labels.map((t, i) => `<button type="button" class="pc${e.used.includes(i + 1) ? ' u' : ''}" data-k="pad ${i + 1}"><b>${i + 1}</b><span>${t}</span></button>`).join('');
-    return `<section class="pads"><h3 class="t"><span class="pos">${e._pos}</span> ${e.title}</h3><div class="padgrid">${cells}</div><p class="cb">${e.used.length ? 'Underlined numbers = pads DOOM OS refers to. ' : ''}Orange labels are Roland’s printed SHIFT functions. Tap a pad to filter.</p></section>`;
+    return `<section class="pads"><h3 class="t"><span class="pos">${e._pos}</span> ${e.title}</h3><div class="padgrid">${cells}</div><p class="cb">${e.used.length && g.padsUsedNote ? g.padsUsedNote + ' ' : ''}${DEV.padsNote}</p></section>`;
   }
   return `<section class="note"><h3 class="t">${e.title}</h3><div class="cb">${chips(e.body)}</div></section>`;
 }
@@ -241,7 +251,7 @@ function render() {
   const list = $('#list'); let html = '', n = 0;
   litHL = {};
   if (active()) {
-    const gs = S.both ? [guide(), ...GUIDES.filter(g => g.id !== S.g)] : [guide()];
+    const gs = S.both ? [guide(), ...guides().filter(g => g.id !== S.g)] : [guide()];
     gs.forEach(g => g.sections.forEach(s => {
       const es = s.entries.map(filterEntry).filter(Boolean).sort((a, b) => rank(a) - rank(b));
       es.forEach(e => {
@@ -252,8 +262,8 @@ function render() {
       html += sectionHTML(g, s, es, S.both);
     }));
     if (S.key) litHL = S.key.id ? { [S.key.id]: ['sel', null] } : {};
-    const where = S.both ? 'either guide' : guide().name;
-    if (!html) html = `<div class="empty"><p>Nothing in ${where} matches ${S.q ? `“${S.q.replace(/</g, '&lt;')}”` : ''}${S.q && S.key ? ' with ' : ''}${S.key ? S.key.text : ''}.</p><div class="acts">${S.both ? '' : '<button type="button" class="go" data-act="both">Search both guides</button>'}<button type="button" data-act="clear">Clear search</button></div></div>`;
+    const where = S.both ? (guides().length > 2 ? 'any guide' : 'either guide') : guide().name;
+    if (!html) html = `<div class="empty"><p>Nothing in ${where} matches ${S.q ? `“${S.q.replace(/</g, '&lt;')}”` : ''}${S.q && S.key ? ' with ' : ''}${S.key ? S.key.text : ''}.</p><div class="acts">${S.both || guides().length < 2 ? '' : `<button type="button" class="go" data-act="both">Search ${guides().length > 2 ? 'all' : 'both'} guides</button>`}<button type="button" data-act="clear">Clear search</button></div></div>`;
     $('#count').textContent = n ? `${n} ${n > 1 ? 'shortcuts' : 'shortcut'} in ${where}` : `No matches in ${where}`;
   } else {
     const g = guide();
@@ -278,7 +288,7 @@ let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(mar
 document.fonts && document.fonts.ready.then(markWraps);
 function renderBoard() {
   const g = guide();
-  $('#map').innerHTML = panelSVG(litHL, 'all', { interactive: true, fill: true, badge: 0, dispSub: dispSub(g), aria: 'SP-404MKII panel: choose a control to list every shortcut that uses it' });
+  $('#map').innerHTML = panelSVG(litHL, 'all', { interactive: true, fill: true, badge: 0, dispSub: dispSub(g), aria: `${DEV.name} panel: choose a control to list every shortcut that uses it` });
   const anyLit = Object.keys(litHL).length > 0;
   $('#mapThumb').innerHTML = panelSVG(litHL, anyLit ? 'auto' : 'all', { fill: true, badge: 0, dispSub: '', aria: anyLit ? `Lit on the panel: ${Object.keys(litHL).map(id => ELLABEL[id]).join(', ')}` : 'Panel overview' });
   $('#thumb').classList.toggle('wide', anyLit);
@@ -295,7 +305,13 @@ function renderBoard() {
 }
 function renderControls() {
   const g = guide();
-  $('#guideSeg').innerHTML = GUIDES.map(x => `<button type="button" data-g="${x.id}" aria-pressed="${S.g === x.id}">${x.name}</button>`).join('');
+  const multi = DEVS.length > 1, gl = guides();
+  $('#devSel').innerHTML = DEVS.map(d => `<option value="${d.id}"${d.id === S.d ? ' selected' : ''}>${d.name}</option>`).join('');
+  $('#devSel').disabled = !multi; $('#devPick').classList.toggle('one', !multi);
+  $('#guideSeg').hidden = gl.length < 2; $('#bothBtn').hidden = gl.length < 2; $('#bothBtn').textContent = DEV.bothLabel;
+  $('#credits').innerHTML = DEV.credits;
+  document.title = `${DEV.name} · Nullrot Notes`;
+  $('#guideSeg').innerHTML = gl.map(x => `<button type="button" data-g="${x.id}" aria-pressed="${S.g === x.id}">${x.name}</button>`).join('');
   $('#secSel').innerHTML = `<option value="all">All sides</option>` + g.sections.map(s => `<option value="${s.n}"${S.s === s.n ? ' selected' : ''}>${s.letter} · ${s.name}</option>`).join('');
   $('#secSel').disabled = active();
   document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
@@ -306,6 +322,10 @@ function renderControls() {
 let timer;
 const top0 = () => scrollTo({ top: 0, behavior: 'smooth' });
 $('#q').addEventListener('input', e => { clearTimeout(timer); timer = setTimeout(() => { S.q = e.target.value.trim(); render(); }, 120); });
+$('#devSel').addEventListener('change', e => {
+  const d = DEVS.find(x => x.id === e.target.value); if (!d) return;
+  S.d = d.id; setDevice(d); S.g = d.guides[0].id; S.s = 'all'; S.key = null; S.both = false; S.open = false; render(); scrollTo(0, 0);
+});
 $('#guideSeg').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; S.g = b.dataset.g; S.s = 'all'; render(); scrollTo(0, 0); });
 $('#secSel').addEventListener('change', e => { S.s = e.target.value === 'all' ? 'all' : +e.target.value; render(); scrollTo(0, 0); });
 $('#bothBtn').addEventListener('click', () => { S.both = !S.both; render(); });

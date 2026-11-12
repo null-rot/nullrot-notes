@@ -4,6 +4,13 @@
 DEVICE = dict(
     id="sp404mk2",
     name="SP-404MKII",
+    maker="Roland",
+    # web app wording for this device
+    both_label="Both OS",                 # toggle that searches every guide of this device
+    pads_note="Orange labels are Roland’s printed SHIFT functions. Tap a pad to filter.",
+    credits=('Unofficial. Compiled from Roland’s SP-404MK2 Reference Manual &amp; v4.00 shortcut list, and the Klangfeld Labs DOOM OS 0.7 manual. '
+             'Community extras credit <a href="https://vultilion.github.io/sp404mk2-cheatsheet/">vultilion</a> (CC BY-NC 4.0). '
+             'Not affiliated with Roland or Klangfeld Labs. Diagrams are schematic.'),
     guides=[
         dict(
             id="doom",
@@ -11,6 +18,7 @@ DEVICE = dict(
             sub="Klangfeld Labs DOOM OS 0.7 on the SP-404MKII",
             content="doom.py",
             disp_sub="DOOM OS grid",          # small text under DISPLAY in the panel drawing
+            pads_used_note="Underlined numbers = pads DOOM OS refers to.",
             title="DOOM OS for SP-404MKII – cheat sheet",
             html="doom-os-cheat-sheet",       # build/<html>.html
             dark_html="doom-os-dark",
@@ -25,6 +33,7 @@ DEVICE = dict(
             sub="Roland SP-404MKII firmware v4.00",
             content="stock.py",
             disp_sub="",
+            pads_used_note="",
             title="SP-404MKII stock OS – cheat sheet",
             html="sp404mk2-stock-cheat-sheet",
             dark_html="stock-os-dark",

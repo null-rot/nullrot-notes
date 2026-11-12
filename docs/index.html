@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SP-404MKII Cheat Sheets</title>
-<meta name="description" content="Searchable cheat sheets for the Roland SP-404MKII: stock OS v4.00 and DOOM OS 0.7.">
+<title>Nullrot Notes</title>
+<meta name="description" content="Nullrot Notes: searchable cheat sheets for my gear, starting with the Roland SP-404MKII (stock OS v4.00 and DOOM OS 0.7).">
 <meta name="theme-color" content="#161617">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -26,7 +26,8 @@
 <div class="shell">
   <aside class="deck" id="deck">
     <div class="head">
-      <h1 class="brand">SP-404MKII <span>cheat sheets</span></h1>
+      <h1 class="brand">Nullrot <span>Notes</span></h1>
+      <label class="dev one" id="devPick"><span class="vh">Device</span><select id="devSel" aria-label="Device"><option>SP-404MKII</option></select></label>
       <div class="seg" id="guideSeg" role="group" aria-label="Guide"></div>
       <button id="themeBtn" class="ibtn" type="button" aria-label="Switch to light theme" aria-pressed="false"><svg aria-hidden="true"><use href="#i-theme"/></svg></button>
     </div>
@@ -50,7 +51,7 @@
   <main id="main" tabindex="-1">
     <p id="count" class="count" aria-live="polite"></p>
     <div id="list"></div>
-    <footer class="foot">
+    <footer class="foot" id="credits">
       Unofficial. Compiled from Roland’s SP-404MK2 Reference Manual &amp; v4.00 shortcut list, and the Klangfeld Labs DOOM OS 0.7 manual.
       Community extras credit <a href="https://vultilion.github.io/sp404mk2-cheatsheet/">vultilion</a> (CC BY-NC 4.0). Not affiliated with Roland or Klangfeld Labs. Diagrams are schematic.
     </footer>

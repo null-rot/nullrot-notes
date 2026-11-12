@@ -22,12 +22,14 @@ CROPS = {}
 BODY = (0, 0, 1000, 750, 26)     # x, y, w, h, corner radius of the unit outline
 VIEW_H = 750                     # viewBox height (auto crops clamp to it)
 AUTO_X = (60, 880)               # x, width used by auto crops
+LABEL_RIGHT = ()                 # knob ids labelled to the right
 def use_layout(layout):
     """layout: a module or dict with ELEMS and CROPS (BODY, VIEW_H, AUTO_X optional)."""
-    global ELEMS, CROPS, BODY, VIEW_H, AUTO_X
+    global ELEMS, CROPS, BODY, VIEW_H, AUTO_X, LABEL_RIGHT
     d = layout if isinstance(layout, dict) else vars(layout)
     ELEMS, CROPS = d["ELEMS"], d["CROPS"]
     BODY, VIEW_H, AUTO_X = d.get("BODY", BODY), d.get("VIEW_H", VIEW_H), d.get("AUTO_X", AUTO_X)
+    LABEL_RIGHT = tuple(d.get("LABEL_RIGHT", ()))
 
 def esc(s): return s.replace("&", "&amp;")
 
@@ -77,7 +79,7 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
             g.append(f'<circle cx="{cx}" cy="{cy}" r="{ew*0.62}" fill="{fill}" stroke="{st}" stroke-width="{4 if r else 2.5}"/>')
             g.append(f'<line x1="{cx}" y1="{cy}" x2="{cx}" y2="{cy-ew*0.55}" stroke="{T['hlring'] if r else T['txt']}" stroke-width="3.5" stroke-linecap="round"/>')
             ly = cy + ew * 0.62 + 18 * fs if id_ != "value" else cy + ew * 0.62 + 18 * fs
-            if id_ in ("vol", "c1", "c2", "c3"):
+            if id_ in LABEL_RIGHT:
                 ly = cy - ew * 0.62 - 6
                 # label to the right instead
                 g.append(f'<text x="{cx+ew*0.62+8}" y="{cy+6*fs}" font-size="{17*fs}" font-weight="800" fill="{T['txt']}">{lab}</text>')

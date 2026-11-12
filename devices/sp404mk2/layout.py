@@ -53,3 +53,4 @@ CROPS = {
 BODY = (52, 4, 896, 738, 26)   # unit outline: x, y, w, h, corner radius
 VIEW_H = 750
 AUTO_X = (60, 880)
+LABEL_RIGHT = ["vol", "c1", "c2", "c3"]   # knobs whose label sits to the right (others: left)

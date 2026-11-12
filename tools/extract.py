@@ -80,15 +80,23 @@ def run(dev, kind):
         sections.append(sec)
     return dict(id=kind, sections=sections)
 
-DEV = sys.argv[1] if len(sys.argv) > 1 else devices.all_ids()[0]
-out = []
-for gd in devices.device(DEV)['guides']:
-    g = run(DEV, gd['id']); g['name'] = gd['name']; g['sub'] = gd['sub']
-    print(gd['id'], [(s['n'], s['title'], len(s['entries'])) for s in g['sections']])
-    out.append(g)
-elems = [dict(id=e[0], kind=e[1], cx=e[2], cy=e[3], w=e[4], h=e[5], label=e[6], sub=e[7]) for e in _pm.ELEMS]
-json.dump(dict(guides=out, elems=elems, crops=_pm.CROPS), open('../build/data.json', 'w', encoding='utf-8'), ensure_ascii=False)
-print('json bytes', len(json.dumps(out, ensure_ascii=False)))
-payload = json.load(open('../build/data.json', encoding='utf-8'))
+ids = sys.argv[1:] or devices.all_ids()
+devs = []
+for dev in ids:
+    meta = devices.device(dev)
+    out = []
+    for gd in meta['guides']:
+        g = run(dev, gd['id'])
+        g.update(name=gd['name'], sub=gd['sub'], dispSub=gd['disp_sub'], padsUsedNote=gd.get('pads_used_note', ''))
+        print(dev, gd['id'], [(s['n'], s['title'], len(s['entries'])) for s in g['sections']])
+        out.append(g)
+    devices.use(dev)
+    elems = [dict(id=e[0], kind=e[1], cx=e[2], cy=e[3], w=e[4], h=e[5], label=e[6], sub=e[7]) for e in _pm.ELEMS]
+    devs.append(dict(id=dev, name=meta['name'], maker=meta.get('maker', ''), bothLabel=meta.get('both_label', 'All guides'),
+                     padsNote=meta.get('pads_note', ''), credits=meta.get('credits', ''),
+                     guides=out, elems=elems, crops=_pm.CROPS, body=list(_pm.BODY), viewH=_pm.VIEW_H,
+                     autoX=list(_pm.AUTO_X), labelRight=list(_pm.LABEL_RIGHT)))
+payload = dict(devices=devs)
+json.dump(payload, open('../build/data.json', 'w', encoding='utf-8'), ensure_ascii=False)
 open('../docs/data.js', 'w', encoding='utf-8').write('window.DATA = ' + json.dumps(payload, ensure_ascii=False, separators=(',', ':')) + ';\n')
-print('wrote ../docs/data.js')
+print('wrote ../docs/data.js', len(json.dumps(payload, ensure_ascii=False)), 'bytes')

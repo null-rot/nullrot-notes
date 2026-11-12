@@ -1,7 +1,11 @@
-# SP-404MKII cheat sheets
+# Nullrot Notes
 
-Printable, foldable, dark-mode and searchable web cheat sheets for the Roland SP-404MKII, covering the
-**stock OS (v4.00)** and **DOOM OS 0.7** (Klangfeld Labs).
+Printable, foldable, dark-mode and searchable web cheat sheets for my gear. Each device lives in `devices/`
+and gets its own panel diagram, guides and PDFs; the web app switches between them.
+
+| Device | Guides |
+|---|---|
+| Roland SP-404MKII | **stock OS (v4.00)** and **DOOM OS 0.7** (Klangfeld Labs) |
 
 | Output | Where |
 |---|---|
