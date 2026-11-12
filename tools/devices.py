@@ -12,7 +12,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent / "devices"
 
 
 def all_ids():
-    return sorted(p.name for p in ROOT.iterdir() if (p / "device.py").is_file())
+    """Device ids in menu order (DEVICE["order"], then name). The first is the web app's default."""
+    ids = [p.name for p in ROOT.iterdir() if (p / "device.py").is_file()]
+    return sorted(ids, key=lambda i: (device(i).get("order", 99), i))
 
 
 def device(dev_id):

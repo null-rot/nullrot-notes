@@ -6,6 +6,7 @@ and gets its own panel diagram, guides and PDFs; the web app switches between th
 | Device | Guides |
 |---|---|
 | Roland SP-404MKII | **stock OS (v4.00)** and **DOOM OS 0.7** (Klangfeld Labs) |
+| Yamaha SEQTRAK | **OS V2.00** |
 
 | Output | Where |
 |---|---|
@@ -40,3 +41,6 @@ write the guide content, and run `./build.sh <id>`.
 Unofficial; not affiliated with Roland or Klangfeld Labs. Sources: Roland SP-404MK2 Reference Manual and v4.00 shortcut list
 (static.roland.com), Klangfeld Labs DOOM OS 0.7 manual. Community extras on the stock guide are from vultilion's sheet
 (https://vultilion.github.io/sp404mk2-cheatsheet/, CC BY-NC 4.0).
+The SEQTRAK guide is written from Yamaha's SEQTRAK User Guide (OS V2.00) and checked against it; the community
+sheets by devopscmac (https://github.com/devopscmac/synth-cheat-sheets) and TAKEUCHI Hitoshi
+(https://cheatsheets.namaraii.com/seqtrak.html) were used as checklists. Not affiliated with Yamaha.

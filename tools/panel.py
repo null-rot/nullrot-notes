@@ -23,13 +23,19 @@ BODY = (0, 0, 1000, 750, 26)     # x, y, w, h, corner radius of the unit outline
 VIEW_H = 750                     # viewBox height (auto crops clamp to it)
 AUTO_X = (60, 880)               # x, width used by auto crops
 LABEL_RIGHT = ()                 # knob ids labelled to the right
+FIT_X = False                    # auto crops also fit horizontally (wide panels)
+MM_PER_UNIT = None               # if set, PDF diagrams print at this fixed scale instead of a fixed width
+FULL_W = 880                     # web: crop width that fills the column (defaults to AUTO_X width)
 def use_layout(layout):
-    """layout: a module or dict with ELEMS and CROPS (BODY, VIEW_H, AUTO_X optional)."""
-    global ELEMS, CROPS, BODY, VIEW_H, AUTO_X, LABEL_RIGHT
+    """layout: a module or dict with ELEMS and CROPS (BODY, VIEW_H, AUTO_X, LABEL_RIGHT, FIT_X, MM_PER_UNIT optional)."""
+    global ELEMS, CROPS, BODY, VIEW_H, AUTO_X, LABEL_RIGHT, FIT_X, MM_PER_UNIT
     d = layout if isinstance(layout, dict) else vars(layout)
     ELEMS, CROPS = d["ELEMS"], d["CROPS"]
     BODY, VIEW_H, AUTO_X = d.get("BODY", BODY), d.get("VIEW_H", VIEW_H), d.get("AUTO_X", AUTO_X)
     LABEL_RIGHT = tuple(d.get("LABEL_RIGHT", ()))
+    FIT_X, MM_PER_UNIT = d.get("FIT_X", False), d.get("MM_PER_UNIT")
+    global FULL_W
+    FULL_W = d.get("FULL_W", AUTO_X[1])   # web: crop width that fills the column
 
 def esc(s): return s.replace("&", "&amp;")
 
@@ -44,17 +50,44 @@ def text_lines(label, cx, cy, size, fill, weight=700):
 DISP_SUB = "DOOM OS grid"
 BADGE_R = 12                       # step badge radius (viewBox units)
 
+def crop_box(hl, crop):
+    """viewBox (x, y, w, h) for a named crop, or for 'auto' (fitted to the lit controls)."""
+    if crop != "auto":
+        return CROPS[crop]
+    hl = hl or {}
+    mg = {"btn": 6, "pad": 4.5, "pad2": 4.5, "knob": 14, "disp": 10}
+    if FIT_X:  # leave room for step badges (top-left) on fitted crops
+        mg = {k: max(v, BADGE_R) for k, v in mg.items()}
+    lit = [e for e in ELEMS if e[0] in hl]
+    ys = [(cy - eh/2 - mg[kind], cy + eh/2 + mg[kind]) for (id_, kind, cx, cy, ew, eh, lab, sub) in lit]
+    y0 = max(0, min(a for a, b in ys)); y1 = min(VIEW_H, max(b for a, b in ys))
+    if not FIT_X:
+        return (AUTO_X[0], y0, AUTO_X[1], max(y1 - y0, 60))
+    xs = []
+    for (id_, kind, cx, cy, ew, eh, lab, sub) in lit:
+        left, right = cx - ew/2 - BADGE_R * 1.8, cx + ew/2 + 14
+        if kind == "knob":
+            r_ = ew * 0.62
+            left, right = cx - r_ - 14, cx + r_ + 14
+            if id_ in LABEL_RIGHT: right += 12 + 10 * len(lab)
+            else: left -= 12 + 10 * len(lab)
+        xs.append((left, right))
+    x0 = max(AUTO_X[0], min(a for a, b in xs)); x1 = min(AUTO_X[0] + AUTO_X[1], max(b for a, b in xs))
+    w = max(x1 - x0, 240)
+    x0 = min(x0, AUTO_X[0] + AUTO_X[1] - w)
+    return (x0, y0, w, max(y1 - y0, 60))
+
+def width_for(hl, crop, default_mm):
+    """PDF width of a diagram: fixed by the caller, or from the layout's fixed scale (capped at a column)."""
+    if MM_PER_UNIT:
+        return round(min(default_mm, crop_box(hl, crop)[2] * MM_PER_UNIT), 1)
+    return default_mm
+
 def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, disp_sub=None, shift_labels=True, show_all_labels=True, aria="SP-404MKII panel diagram"):
     """hl: dict id -> (role, order or None). roles: hold/press/turn"""
     hl = hl or {}
     if disp_sub is None: disp_sub = DISP_SUB
-    if crop == "auto":
-        mg = {"btn": 6, "pad": 4.5, "pad2": 4.5, "knob": 14, "disp": 10}
-        ys = [(cy - eh/2 - mg[kind], cy + eh/2 + mg[kind]) for (id_, kind, cx, cy, ew, eh, lab, sub) in ELEMS if id_ in hl]
-        y0 = max(0, min(a for a, b in ys)); y1 = min(VIEW_H, max(b for a, b in ys))
-        x, y, w, h = AUTO_X[0], y0, AUTO_X[1], max(y1 - y0, 60)
-    else:
-        x, y, w, h = CROPS[crop]
+    x, y, w, h = crop_box(hl, crop)
     dim = bool(hl)
     parts = []
     badges = []
@@ -96,7 +129,7 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
                 if "SHIFT" == lab: fsz = 17 * fs
                 if r and fs >= 1.0:
                     mx = max(len(t) for t in lab.split("\n"))
-                    fsz = max(fsz, min(21, 72 / (mx * 0.64))) * (bigfs)
+                    fsz = max(fsz, min(21, (72 if ew >= 78 else ew * 0.92) / (mx * 0.64))) * (bigfs)
                 g.append(text_lines(lab, cx, cy, fsz, tx))
         else:  # pad / pad2
             fill, ink = (ROLE[r] if r else (T["btn"], "#111"))
@@ -105,9 +138,11 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
             if r == "hold":
                 g.append(f'<rect x="{cx-ew/2+6}" y="{cy-eh/2+6}" width="{ew-12}" height="{eh-12}" rx="5" fill="none" stroke="{T['hlring']}" stroke-width="1.6"/>')
             if kind == "pad":
-                g.append(f'<text x="{cx}" y="{cy-2*fs}" text-anchor="middle" font-size="{(42 if r else 34)*fs}" font-weight="800" fill="{tx}">{lab}</text>')
+                psz = (42 if r else 34) * fs
+                py = cy - 2 * fs if sub else cy + psz * 0.35   # no SHIFT bar: centre the number
+                g.append(f'<text x="{cx}" y="{py:.1f}" text-anchor="middle" font-size="{psz}" font-weight="800" fill="{tx}">{lab}</text>')
             else:
-                g.append(text_lines(lab, cx, cy - 8, 20 * fs if "\n" not in lab else 17 * fs, tx))
+                g.append(text_lines(lab, cx, cy - 8 if sub else cy, 20 * fs if "\n" not in lab else 17 * fs, tx))
             if shift_labels and sub:
                 g.append(f'<rect x="{cx-ew/2+8}" y="{cy+eh/2-23}" width="{ew-16}" height="17" rx="3" fill="{T['shbar']}"/>')
                 g.append(f'<text x="{cx}" y="{cy+eh/2-10}" text-anchor="middle" font-size="{12.5*fs}" font-weight="800" fill="{T['shtxt']}" letter-spacing=".3">{sub}</text>')

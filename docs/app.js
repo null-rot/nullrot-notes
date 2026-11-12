@@ -13,8 +13,9 @@ const chips = s => s.replace(/\[\[(.+?)\]\]/g, (m, k) => `<b class="k" tabindex=
 function setDevice(d) {
   DEV = d; ELEMS = d.elems; CROPS = d.crops; ELBYNORM = {}; ELLABEL = {}; ELKIND = {};
   ELEMS.forEach(e => {
-    ELBYNORM[e.kind === 'pad' ? 'PAD' + e.label : norm(e.label)] = e.id;
-    ELLABEL[e.id] = e.kind === 'pad' ? 'pad ' + e.label : e.label.replace(/\n/g, ' ');
+    const pw = d.padWord || 'pad';   /* what numbered pads/keys are called: "pad 5", "key 5" */
+    ELBYNORM[e.kind === 'pad' ? pw.toUpperCase() + e.label : norm(e.label)] = e.id;
+    ELLABEL[e.id] = e.kind === 'pad' ? pw + ' ' + e.label : e.label.replace(/\n/g, ' ').replace(/\/ /g, '/');
     ELKIND[e.id] = e.kind;
   });
   document.documentElement.dataset.device = d.id;   /* hook for per-device palette overrides in styles.css */
@@ -46,6 +47,16 @@ function panelSVG(hl, crop, o = {}) {
     if (!ys.length) return '';
     const y0 = Math.max(0, Math.min(...ys.map(a => a[0]))), y1 = Math.min(DEV.viewH, Math.max(...ys.map(a => a[1])));
     x = DEV.autoX[0]; y = y0; w = DEV.autoX[1]; h = Math.max(y1 - y0, 80);
+    if (DEV.fitX) {   /* wide panels: fit the crop to the lit controls left to right as well */
+      const xs = ELEMS.filter(e => hl[e.id]).map(e => {
+        if (e.kind !== 'knob') return [e.cx - e.w / 2 - 36, e.cx + e.w / 2 + 14];
+        const r0 = e.w * 0.62, lab = 26 + 10 * e.label.length;
+        return DEV.labelRight.includes(e.id) ? [e.cx - r0 - 14, e.cx + r0 + 14 + lab] : [e.cx - r0 - 14 - lab, e.cx + r0 + 14];
+      });
+      const lo = DEV.autoX[0], hi = DEV.autoX[0] + DEV.autoX[1];
+      let x0 = Math.max(lo, Math.min(...xs.map(a => a[0]))); const x1 = Math.min(hi, Math.max(...xs.map(a => a[1])));
+      w = Math.max(x1 - x0, 240); x = Math.min(x0, hi - w);
+    }
   } else {
     [x, y, w, h] = CROPS[crop];
     if (crop !== 'all') {
@@ -83,13 +94,14 @@ function panelSVG(hl, crop, o = {}) {
       if (r === 'hold') g.push(`<rect x="${cx - ew / 2 + 5}" y="${cy - eh / 2 + 5}" width="${ew - 10}" height="${eh - 10}" rx="4" style="fill:none;stroke:var(--phlring);stroke-width:2"/>`);
       let fsz = !lab.includes('\n') && lab.length < 8 ? 15 : 14;
       if (lab === 'SHIFT') fsz = 17;
-      if (r) { const mx = Math.max(...lab.split('\n').map(t => t.length)); fsz = Math.max(fsz, Math.min(21, 72 / (mx * 0.64))); }
+      if (r) { const mx = Math.max(...lab.split('\n').map(t => t.length)); fsz = Math.max(fsz, Math.min(21, (ew >= 78 ? 72 : ew * 0.92) / (mx * 0.64))); }
       g.push(textLines(lab, cx, cy, fsz, tx));
     } else {
       g.push(`<rect x="${cx - ew / 2}" y="${cy - eh / 2}" width="${ew}" height="${eh}" rx="9" ${st(fill, stroke, r === 'hold' ? 4 : r ? 3 : 2)}/>`);
       if (r === 'hold') g.push(`<rect x="${cx - ew / 2 + 6}" y="${cy - eh / 2 + 6}" width="${ew - 12}" height="${eh - 12}" rx="5" style="fill:none;stroke:var(--phlring);stroke-width:2"/>`);
-      if (e.kind === 'pad') g.push(`<text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="${r ? 42 : 34}" font-weight="800" ${tf(tx)}>${lab}</text>`);
-      else g.push(textLines(lab, cx, cy - 8, lab.includes('\n') ? 17 : 20, tx));
+      const psz = r ? 42 : 34;   /* keys without a SHIFT bar centre their label */
+      if (e.kind === 'pad') g.push(`<text x="${cx}" y="${sub ? cy - 2 : (cy + psz * 0.35).toFixed(1)}" text-anchor="middle" font-size="${psz}" font-weight="800" ${tf(tx)}>${lab}</text>`);
+      else g.push(textLines(lab, cx, sub ? cy - 8 : cy, lab.includes('\n') ? 17 : 20, tx));
       if (sub) {
         const quiet = dim && !r;
         g.push(`<rect x="${cx - ew / 2 + 8}" y="${cy + eh / 2 - 23}" width="${ew - 16}" height="17" rx="3" ${st(quiet ? 'var(--pshdim)' : 'var(--pshbar)')}/>`);
@@ -104,7 +116,7 @@ function panelSVG(hl, crop, o = {}) {
     }
   }
   P.push(badges.join(''));
-  const vbw = w, wpct = Math.min(100, vbw / DEV.autoX[1] * 100).toFixed(2);
+  const vbw = w, wpct = Math.min(100, vbw / (DEV.fullW || DEV.autoX[1]) * 100).toFixed(2);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${w} ${h}" style="width:${o.fill ? 100 : wpct}%" role="img" aria-label="${attr(o.aria || DEV.name + ' panel')}" font-family="Barlow,Inter,Helvetica,Arial,sans-serif">${P.join('')}</svg>`;
 }
 
@@ -114,7 +126,9 @@ function rowHL(input) {
   while ((m = re.exec(input))) {
     const before = input.slice(last, m.index).toLowerCase(); last = re.lastIndex;
     const id = idFor(m[1]); if (!id || hl[id]) continue;
-    const role = ELKIND[id] === 'knob' ? 'turn' : /hold/.test(before) ? 'hold' : 'press';
+    /* the nearest action word before the chip decides: "hold lit key + turn [[ALL]]" -> turn */
+    const verbs = before.match(/hold|press|turn/g), v = verbs ? verbs[verbs.length - 1] : null;
+    const role = v || (ELKIND[id] === 'knob' ? 'turn' : 'press');
     hl[id] = [role, ++n];
   }
   return hl;

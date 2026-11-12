@@ -4,6 +4,7 @@
 DEVICE = dict(
     id="sp404mk2",
     name="SP-404MKII",
+    order=1,                              # menu position; the first device is the default
     maker="Roland",
     # web app wording for this device
     both_label="Both OS",                 # toggle that searches every guide of this device

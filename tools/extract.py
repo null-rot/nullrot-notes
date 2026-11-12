@@ -95,7 +95,7 @@ for dev in ids:
     devs.append(dict(id=dev, name=meta['name'], maker=meta.get('maker', ''), bothLabel=meta.get('both_label', 'All guides'),
                      padsNote=meta.get('pads_note', ''), credits=meta.get('credits', ''),
                      guides=out, elems=elems, crops=_pm.CROPS, body=list(_pm.BODY), viewH=_pm.VIEW_H,
-                     autoX=list(_pm.AUTO_X), labelRight=list(_pm.LABEL_RIGHT)))
+                     autoX=list(_pm.AUTO_X), labelRight=list(_pm.LABEL_RIGHT), padWord=meta.get('pad_word', 'pad'), fitX=bool(_pm.FIT_X), fullW=_pm.FULL_W))
 payload = dict(devices=devs)
 json.dump(payload, open('../build/data.json', 'w', encoding='utf-8'), ensure_ascii=False)
 open('../docs/data.js', 'w', encoding='utf-8').write('window.DATA = ' + json.dumps(payload, ensure_ascii=False, separators=(',', ':')) + ';\n')

@@ -3,6 +3,7 @@
 Device content files do `from sheet import *` and get chips(), card(), tbl(), H/P/T and CSS.
 """
 import re
+import panel as _panel
 from panel import panel
 
 def chips(s):
@@ -12,7 +13,7 @@ CROPW = {"lower": 92, "buttons": 92, "pads": 92, "knobs": 92, "auto": 92, "top":
 
 def card(title, hl, crops, body, span=1):
     if isinstance(crops, str): crops = [crops]
-    svgs = "".join(f'<div class="pn">{panel(hl, c, width_mm=CROPW[c], bigfs=1.0, aria=title)}</div>' for c in crops)
+    svgs = "".join(f'<div class="pn">{panel(hl, c, width_mm=_panel.width_for(hl, c, CROPW.get(c, 92)), bigfs=1.0, aria=title)}</div>' for c in crops)
     return f'<section class="card s{span}"><h3>{title}</h3>{svgs}<div class="cb">{chips(body)}</div></section>'
 
 def tbl(head, rows, cls=""):
