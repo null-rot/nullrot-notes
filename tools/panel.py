@@ -1,5 +1,4 @@
-# Vector schematic of the Roland SP-404MKII top panel (not to scale).
-# Layout verified against Roland's SP-404MK2 Reference Manual panel photos.
+# Vector schematic renderer for a device's top panel (not to scale). Geometry lives in devices/<id>/layout.py.
 # Print theme: paper panel (ink-light) with the web app's LED role colours as tints, Roland orange for SHIFT.
 LIGHT = dict(bg="#fff", body="#EFECE4", bodystroke="#161617", disp="#161617", dispstroke="#000", dispfg="#ECE8DF", dispsub="#CFC9BB",
   btn="#fff", stroke="#161617", hlstroke="#161617", hlring="#161617", txt="#161617", hltxt="#161617", shbar="#F26A1B", shtxt="#161617",
@@ -17,52 +16,18 @@ def set_theme(name):
     T = HARDWARE if name in ("hardware", "dark") else LIGHT
     ROLE = T["role"]
 
-def build_elems():
-    E = []  # (id, kind, cx, cy, w, h, label, sublabel)
-    # knobs
-    for i, (id_, x, lab) in enumerate([("vol", 200, "VOLUME"), ("c1", 390, "CTRL 1"), ("c2", 580, "CTRL 2"), ("c3", 800, "CTRL 3")]):
-        E.append((id_, "knob", x, 38, 34, 34, lab, ""))
-    # fx buttons
-    for i, (id_, lab) in enumerate([("fx_fd", "FILTER\n+DRIVE"), ("fx_res", "RESONATOR"), ("fx_delay", "DELAY")]):
-        E.append((id_, "btn", 200, 100 + i * 46, 140, 38, lab, ""))
-    for i, (id_, lab) in enumerate([("fx_iso", "ISOLATOR"), ("fx_djfx", "DJFX\nLOOPER"), ("fx_mfx", "MFX")]):
-        E.append((id_, "btn", 800, 100 + i * 46, 140, 38, lab, ""))
-    # display
-    E.append(("display", "disp", 500, 146, 92, 92, "DISPLAY", ""))
-    # left block 3x3
-    L = [["pattern_select", "pattern_edit", "record_setting"], ["del", "rec", "resample"], ["exit", "copy", "remain"]]
-    LAB = {"pattern_select": "PATTERN\nSELECT", "pattern_edit": "PATTERN\nEDIT", "record_setting": "RECORD\nSETTING", "del": "DEL", "rec": "REC", "resample": "RESAMPLE", "exit": "EXIT", "copy": "COPY", "remain": "REMAIN"}
-    ys = [262, 316, 370]
-    for r, row in enumerate(L):
-        for c, id_ in enumerate(row):
-            E.append((id_, "btn", 141 + c * 88, ys[r], 78, 42, LAB[id_], ""))
-    # right block
-    for id_, x, lab in [("start_end", 413, "START/\nEND"), ("pitch_speed", 523, "PITCH/\nSPEED"), ("mark", 633, "MARK")]:
-        E.append((id_, "btn", x, ys[0], 82, 42, lab, ""))
-    E.append(("value", "knob", 853, ys[0] - 2, 40, 40, "VALUE", ""))
-    for id_, x, lab in [("bpm_sync", 413, "BPM\nSYNC"), ("gate", 523, "GATE"), ("loop", 633, "LOOP"), ("reverse", 743, "REVERSE"), ("roll", 853, "ROLL")]:
-        E.append((id_, "btn", x, ys[1], 82, 42, lab, ""))
-    for i, (id_, lab) in enumerate([("bank_AF", "A/F"), ("bank_BG", "B/G"), ("bank_CH", "C/H"), ("bank_DI", "D/I"), ("bank_EJ", "E/J"), ("shift", "SHIFT")]):
-        E.append((id_, "btn", 413 + i * 88, ys[2], 78, 42, lab, ""))
-    # pads  (pad 1 top-left ... 16 bottom-right)
-    SH = ["FIXED VELOCITY", "16 VELOCITY", "CUE", "CHROMATIC", "EXCHANGE", "INIT PARAM", "PAD LINK", "MUTE GROUPS", "METRONOME", "COUNT-IN", "TAP TEMPO", "GAIN", "UTILITY", "IMPORT/EXPORT", "PAD SETTING", "EFX SETTING"]
-    for n in range(16):
-        r, c = divmod(n, 4)
-        E.append((f"p{n+1}", "pad", 175 + c * 162.5, 452 + r * 77, 150, 68, str(n + 1), SH[n]))
-    for r, (id_, lab, sh) in enumerate([("bus_fx", "BUS FX", "MUTE BUS"), ("hold", "HOLD", "PAUSE"), ("ext_source", "EXT\nSOURCE", "INPUT SETTING"), ("sub_pad", "SUB PAD", "PROJECT")]):
-        E.append((id_, "pad2", 825, 452 + r * 77, 150, 68, lab, sh))
-    return E
-
-ELEMS = build_elems()
-CROPS = {
-    "all": (44, 0, 912, 750),
-    "buttons": (60, 232, 880, 160),
-    "lower": (60, 244, 880, 506),
-    "knobs": (60, 6, 880, 66),
-    "pads": (60, 412, 880, 338),
-    "top": (60, 0, 880, 235),
-    "ctrl_fx": (80, 0, 840, 405),
-}
+# Element geometry comes from the active device's layout.py (see use_layout / devices.py).
+ELEMS = []
+CROPS = {}
+BODY = (0, 0, 1000, 750, 26)     # x, y, w, h, corner radius of the unit outline
+VIEW_H = 750                     # viewBox height (auto crops clamp to it)
+AUTO_X = (60, 880)               # x, width used by auto crops
+def use_layout(layout):
+    """layout: a module or dict with ELEMS and CROPS (BODY, VIEW_H, AUTO_X optional)."""
+    global ELEMS, CROPS, BODY, VIEW_H, AUTO_X
+    d = layout if isinstance(layout, dict) else vars(layout)
+    ELEMS, CROPS = d["ELEMS"], d["CROPS"]
+    BODY, VIEW_H, AUTO_X = d.get("BODY", BODY), d.get("VIEW_H", VIEW_H), d.get("AUTO_X", AUTO_X)
 
 def esc(s): return s.replace("&", "&amp;")
 
@@ -84,8 +49,8 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
     if crop == "auto":
         mg = {"btn": 6, "pad": 4.5, "pad2": 4.5, "knob": 14, "disp": 10}
         ys = [(cy - eh/2 - mg[kind], cy + eh/2 + mg[kind]) for (id_, kind, cx, cy, ew, eh, lab, sub) in ELEMS if id_ in hl]
-        y0 = max(0, min(a for a, b in ys)); y1 = min(750, max(b for a, b in ys))
-        x, y, w, h = 60, y0, 880, max(y1 - y0, 60)
+        y0 = max(0, min(a for a, b in ys)); y1 = min(VIEW_H, max(b for a, b in ys))
+        x, y, w, h = AUTO_X[0], y0, AUTO_X[1], max(y1 - y0, 60)
     else:
         x, y, w, h = CROPS[crop]
     dim = bool(hl)
@@ -93,7 +58,8 @@ def panel(hl=None, crop="all", labels=True, width_mm=None, fs=1.0, bigfs=1.0, di
     badges = []
     parts.append(f'<rect x="{x-20}" y="{y-20}" width="{w+40}" height="{h+40}" fill="{T['bg']}"/>')
     # body
-    parts.append(f'<rect x="52" y="4" width="896" height="738" rx="26" fill="{T['body']}" stroke="{T['bodystroke']}" stroke-width="3"/>')
+    bx_, by_, bw_, bh_, br_ = BODY
+    parts.append(f'<rect x="{bx_}" y="{by_}" width="{bw_}" height="{bh_}" rx="{br_}" fill="{T['body']}" stroke="{T['bodystroke']}" stroke-width="3"/>')
     # pad well hint
     for (id_, kind, cx, cy, ew, eh, lab, sub) in ELEMS:
         role = hl.get(id_)

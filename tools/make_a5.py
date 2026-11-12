@@ -2,21 +2,15 @@ import sys, re, subprocess
 sys.path.insert(0, '.')
 from playwright.sync_api import sync_playwright
 import browser
+import devices
 
-def load(kind):
-    """exec the booklet source up to the page assembly; return (inner pages, css, chips, disp)"""
+def load(dev, gid):
+    """exec the guide's content up to the page assembly; return (namespace, page calls)"""
+    devices.use(dev, gid)
+    src = devices.source(dev, gid)
     ns = {}
-    if kind == 'doom':
-        src = open('book.py').read()
-        code = src[:src.index("pages = [")]
-        exec(code, ns)
-        calls = re.findall(r'page\((\d), "(.*?)", "(.*?)", (p\d)\)', src[src.index("pages = ["):])
-    else:
-        import panel as _pm; _pm.DISP_SUB = ''
-        src = open('book_stock.py').read()
-        code = src[:src.index("pages = [")]
-        exec(code, ns)
-        calls = re.findall(r'page\((\d), "(.*?)", "(.*?)", (p\d)\)', src[src.index("pages = ["):])
+    exec(src[:src.index("pages = [")], ns)
+    calls = re.findall(r'page\((\d), "(.*?)", "(.*?)", (p\d)\)', src[src.index("pages = ["):])
     return ns, calls
 
 A5CSS = '''
@@ -47,8 +41,8 @@ table { font-size: 7.6pt }
 h2, h2.sec { break-after: avoid }
 '''
 
-def build(kind, out_html, foot, pad_to):
-    ns, calls = load(kind)
+def build(dev, gid, out_html, foot, pad_to):
+    ns, calls = load(dev, gid)
     chips = ns['chips']; panel = ns['panel']; CSS = ns['CSS']
     secs = []
     for n, title, sub, var in calls:
@@ -57,7 +51,7 @@ def build(kind, out_html, foot, pad_to):
     notes = lambda k: f'<section class="sec notes-sec"><header><div><h1>Notes</h1><p>Your own shortcuts, settings and tricks</p></div></header><div class="notes"></div></section>'
     body = "".join(secs) + "".join(notes(i) for i in range(pad_to))
     html = f'<!doctype html><html lang="en"><head><meta charset="utf-8"><style>{CSS}{A5CSS.replace("@@FOOT@@", foot)}</style></head><body>{chips(body)}</body></html>'
-    open(out_html, 'w').write(html)
+    open(out_html, 'w', encoding='utf-8').write(html)
 
 def render(html, pdf):
     with sync_playwright() as p:
@@ -71,11 +65,12 @@ def npages(pdf):
     return len(PdfReader(pdf).pages)
 
 if __name__ == '__main__':
-    kind, name, foot = sys.argv[1], sys.argv[2], sys.argv[3]
+    dev, gid = sys.argv[1], sys.argv[2]
+    g = devices.guide(dev, gid); name, foot = g['a5_name'], g['foot']
     h = f'../build/{name}-a5.html'; pdf = f'../build/{name}-a5.pdf'
-    build(kind, h, foot, 0); render(h, pdf); n = npages(pdf)
+    build(dev, gid, h, foot, 0); render(h, pdf); n = npages(pdf)
     pad = (-n) % 4
     print('pages before pad', n, 'pad', pad)
     if pad:
-        build(kind, h, foot, pad); render(h, pdf); n = npages(pdf)
+        build(dev, gid, h, foot, pad); render(h, pdf); n = npages(pdf)
     print('final pages', n)

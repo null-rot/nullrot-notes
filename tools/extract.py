@@ -1,6 +1,7 @@
 import sys, re, json
 sys.path.insert(0, '.')
 import panel as _pm
+import devices
 
 def strip_tags(h):
     h = re.sub(r'<br\s*/?>', ' ', h)
@@ -14,14 +15,12 @@ def chips_of(*hs):
         out += re.findall(r'\[\[(.+?)\]\]', h or '')
     return out
 
-def run(kind):
-    srcfile = 'book.py' if kind == 'doom' else 'book_stock.py'
-    book = open('book.py').read()
-    src = open(srcfile).read()
+def run(dev, kind):
+    devices.use(dev, kind)
+    src = devices.source(dev, kind)
     ns = {}
     first = re.search(r'^# -+ PAGE 1', src, re.M).start()
     exec(src[:first], ns)          # helpers (card/tbl/panel/H/P/T)
-    _pm.DISP_SUB = '' if kind == 'stock' else 'DOOM OS grid'
     records = []
     cur = {'page': 0}
     ocard, otbl = ns['card'], ns['tbl']
@@ -36,10 +35,7 @@ def run(kind):
     # run page blocks in order
     pat = r'(?m)^# -+ PAGE (\d)[^\n]*'
     marks = [(m.start(), m.end(), int(m.group(1))) for m in re.finditer(pat, src)]
-    endpos = src.index('pages = [') if kind == 'doom' else src.index('pages = [')
-    if kind == 'stock':
-        ns['page'] = lambda *a, **k: ''   # not needed
-        ns['chips'] = ns['chips']
+    endpos = src.index('pages = [')
     for i, (s, e, n) in enumerate(marks):
         block = src[e: (marks[i+1][0] if i + 1 < len(marks) else endpos)]
         cur['page'] = n
@@ -84,15 +80,15 @@ def run(kind):
         sections.append(sec)
     return dict(id=kind, sections=sections)
 
+DEV = sys.argv[1] if len(sys.argv) > 1 else devices.all_ids()[0]
 out = []
-for k, name, sub in (('doom', 'DOOM OS', 'Klangfeld Labs DOOM OS 0.7 on the SP-404MKII'), ('stock', 'Stock OS', 'Roland SP-404MKII firmware v4.00')):
-    g = run(k); g['name'] = name; g['sub'] = sub
-    n = sum(len(s['entries']) for s in g['sections'])
-    print(k, [(s['n'], s['title'], len(s['entries'])) for s in g['sections']])
+for gd in devices.device(DEV)['guides']:
+    g = run(DEV, gd['id']); g['name'] = gd['name']; g['sub'] = gd['sub']
+    print(gd['id'], [(s['n'], s['title'], len(s['entries'])) for s in g['sections']])
     out.append(g)
 elems = [dict(id=e[0], kind=e[1], cx=e[2], cy=e[3], w=e[4], h=e[5], label=e[6], sub=e[7]) for e in _pm.ELEMS]
-json.dump(dict(guides=out, elems=elems, crops=_pm.CROPS), open('../build/data.json', 'w'), ensure_ascii=False)
+json.dump(dict(guides=out, elems=elems, crops=_pm.CROPS), open('../build/data.json', 'w', encoding='utf-8'), ensure_ascii=False)
 print('json bytes', len(json.dumps(out, ensure_ascii=False)))
-payload = json.load(open('../build/data.json'))
-open('../docs/data.js', 'w').write('window.DATA = ' + json.dumps(payload, ensure_ascii=False, separators=(',', ':')) + ';\n')
+payload = json.load(open('../build/data.json', encoding='utf-8'))
+open('../docs/data.js', 'w', encoding='utf-8').write('window.DATA = ' + json.dumps(payload, ensure_ascii=False, separators=(',', ':')) + ';\n')
 print('wrote ../docs/data.js')

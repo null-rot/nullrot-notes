@@ -15,9 +15,22 @@ Settings > Pages > Deploy from branch > `main` / `/docs`.
 
 ## Rebuild
 ```
-pip install -r requirements.txt && playwright install chromium   # or have google-chrome at /usr/bin/google-chrome
-./build.sh
+pip install -r requirements.txt
+./build.sh              # every device; or ./build.sh sp404mk2
 ```
+The build finds Chrome or Edge on Windows, macOS or Linux (or set `CHROME_PATH`); without one it falls back to
+Playwright's Chromium (`playwright install chromium`). It stops if any A4 page runs into its footer.
+
+## Layout
+```
+devices/<id>/device.py   names, guides, output file names, footers
+devices/<id>/layout.py   panel geometry: every control's position, size and label; named crops
+devices/<id>/<guide>.py  booklet content (cards, tables, pages)
+tools/                   shared: panel renderer, booklet CSS/helpers, PDF + web-data build
+docs/                    the web app (data.js is generated)
+```
+To add a device, copy `devices/sp404mk2/` as a starting point, redraw `layout.py` for the new panel,
+write the guide content, and run `./build.sh <id>`.
 
 ## Credits and licence notes
 Unofficial; not affiliated with Roland or Klangfeld Labs. Sources: Roland SP-404MK2 Reference Manual and v4.00 shortcut list

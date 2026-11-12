@@ -1,11 +1,6 @@
-import sys, re
-sys.path.insert(0, '.')
-src = open('book.py').read()
-head = src[:src.index('# ---------------- PAGE 1')]
-import panel as _pm; _pm.DISP_SUB = ''
-exec(head)                                   # chips, card, tbl, H/P/T, panel
-css_start = src.index("CSS = '''"); css_end = src.index("'''\npages")
-exec(src[css_start:css_end + 3])             # CSS
+# SP-404MKII stock OS v4.00: booklet content. Shared helpers/CSS come from tools/sheet.py.
+from sheet import *
+
 TOTAL = 6
 def page(n, title, sub, inner):
     return f'''<div class="page"><header><div><h1>{title}</h1><p>{sub}</p></div><div class="pg">SP-404MKII · stock OS (v4.00)<br><b>{n} / {TOTAL}</b></div></header>{inner}
@@ -175,7 +170,3 @@ pages = [
  page(5, "FX, routing &amp; system", "Buses · MFX · effect grab · projects · utility · import / export", p5),
  page(6, "DJ mode &amp; SHIFT table", "DJ shortcuts · every SHIFT + button · pad functions · community extras", p6),
 ]
-body_html = chips("".join(pages))
-html = f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SP-404MKII stock OS – cheat sheet</title><style>{CSS}</style></head><body>{body_html}</body></html>'
-open('../build/sp404mk2-stock-cheat-sheet.html', 'w').write(html)
-print('ok')

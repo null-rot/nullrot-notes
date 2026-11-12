@@ -1,16 +1,14 @@
 import sys, re
 sys.path.insert(0, '.')
 import panel as _pm
-kind, out = sys.argv[1], sys.argv[2]
+import devices
+dev, gid = sys.argv[1], sys.argv[2]
+g = devices.guide(dev, gid); out = g['dark_html']
+devices.use(dev, gid)
 _pm.set_theme('hardware')
-if kind == 'stock': _pm.DISP_SUB = ''
-srcfile = 'book.py' if kind == 'doom' else 'book_stock.py'
-src = open(srcfile).read()
+src = devices.source(dev, gid)
 ns = {}
-code = src[:src.index("pages = [")]
-if kind == 'stock':
-    code = code.replace("import panel as _pm; _pm.DISP_SUB = ''\n", "")   # keep our theme-set module
-exec(code, ns)
+exec(src[:src.index("pages = [")], ns)
 calls = re.findall(r'page\((\d), "(.*?)", "(.*?)", (p\d)\)', src[src.index("pages = ["):])
 pages = [ns['page'](int(n), t, s, ns[v]) for n, t, s, v in calls]
 DARK = '''
@@ -42,4 +40,4 @@ td { border-bottom-color:#323237 }
 .cb b:not(.k), li b:not(.k), td b:not(.k), p b:not(.k), .map b { color:#ece8df; font-weight:700 }
 '''
 html = f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{out} (dark)</title><style>{ns["CSS"]}{DARK}</style></head><body>{ns["chips"]("".join(pages))}</body></html>'
-open(f'../build/{out}.html', 'w').write(html); print('ok')
+open(f'../build/{out}.html', 'w', encoding='utf-8').write(html); print('ok')
