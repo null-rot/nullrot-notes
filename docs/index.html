@@ -20,6 +20,7 @@
   <symbol id="m-turn" viewBox="0 0 16 16"><path d="M3.2 10.6A5.4 5.4 0 1 1 12.8 10.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12.8 6.8v3.9H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-side" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 4.5v15" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 <a class="skip" href="#main">Skip to shortcuts</a>
@@ -29,6 +30,7 @@
       <h1 class="brand">Nullrot <span>Notes</span></h1>
       <label class="dev one" id="devPick"><span class="vh">Device</span><select id="devSel" aria-label="Device"><option>SP-404MKII</option></select></label>
       <div class="seg" id="guideSeg" role="group" aria-label="Guide"></div>
+      <button id="railBtn" class="ibtn railbtn" type="button" aria-label="Collapse the sidebar" aria-pressed="false" title="Collapse the sidebar"><svg aria-hidden="true"><use href="#i-side"/></svg></button>
       <button id="themeBtn" class="ibtn" type="button" aria-label="Switch to light theme" aria-pressed="false"><svg aria-hidden="true"><use href="#i-theme"/></svg></button>
     </div>
     <div class="find">
@@ -36,6 +38,7 @@
     </div>
     <div class="board" id="board">
       <button class="thumb" id="thumb" type="button" aria-expanded="false" aria-controls="board" aria-label="Open the panel to filter by control"><span id="mapThumb"></span><span class="tip" aria-hidden="true">Filter</span><svg class="xp" aria-hidden="true"><use href="#i-expand"/></svg></button>
+      <button class="zoombtn" id="zoomBtn" type="button" aria-label="Enlarge the panel" title="Enlarge the panel"><svg aria-hidden="true"><use href="#i-expand"/></svg>Enlarge</button>
       <div class="map" id="map"></div>
       <div class="lit" id="lit"></div>
     </div>
@@ -57,6 +60,11 @@
     </footer>
   </main>
 </div>
+<dialog class="zoom" id="zoom" aria-labelledby="zTitle">
+  <div class="zbar"><h2 id="zTitle"></h2><button type="button" class="ibtn" id="zClose" aria-label="Close"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <div class="zbody" id="zBody"></div>
+  <p class="zhint" id="zHint"></p>
+</dialog>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>

@@ -73,6 +73,21 @@ button,select,input{font:inherit;color:inherit}
 .thumb .tip{display:block;margin-top:3px;padding-right:16px;font:700 10px/1 var(--cond);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:center}
 .thumb .xp{position:absolute;right:3px;bottom:3px;width:16px;height:16px;color:var(--ink);background:var(--bg);border-radius:4px;padding:2px}
 .map{display:none}
+.railbtn,.zoombtn{display:none}
+.zoombtn{position:absolute;top:8px;right:8px;z-index:1;align-items:center;gap:6px;min-height:36px;padding:0 10px;border:1px solid var(--rule);border-radius:8px;background:var(--deck);color:var(--ink);font:700 13px/1 var(--cond);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.zoombtn svg{width:16px;height:16px}
+.zoombtn:hover,.railbtn:hover{border-color:var(--ink)}
+#list .dia{cursor:zoom-in}
+.zoom{width:min(1400px,94vw);max-width:none;max-height:92vh;padding:16px 18px 14px;border:1px solid var(--rule);border-radius:12px;background:var(--bg);color:var(--ink)}
+.zoom::backdrop{background:rgba(10,10,11,.72)}
+.zbar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.zbar h2{flex:1;margin:0;font:700 20px/1.1 var(--cond);letter-spacing:.02em}
+.zbody svg{display:block;width:100%!important;height:auto;max-height:calc(92vh - 130px);border-radius:10px}
+.zbody g.el{cursor:pointer}
+.zbody g.el:hover>:first-child{stroke:var(--phlstroke);stroke-width:5}
+.zbody g.el:focus{outline:none}
+.zbody g.el:focus-visible>:first-child{stroke:var(--phlstroke);stroke-width:7}
+.zhint{margin:10px 0 0;color:var(--mute);font-size:14px}
 .board.open{grid-template-columns:1fr}
 .board.open .thumb{display:none}
 .board.open .map{display:block}
@@ -188,6 +203,13 @@ mark{background:var(--hit);color:var(--ink);border-radius:2px;padding:0 1px;text
   .board{grid-template-columns:1fr}
   .thumb{display:none}
   .map{display:block}
+  .board{position:relative}
+  .railbtn{display:grid}
+  .zoombtn{display:inline-flex}
+  .shell.rail{grid-template-columns:68px minmax(0,1fr);max-width:none}
+  .rail .deck{padding:20px 11px;overflow:hidden}
+  .rail .deck>:not(.head),.rail .head>:not(.railbtn){display:none}
+  .rail main{max-width:1400px;margin:0 auto;width:100%}
   .map svg{max-height:none}
   .lit .shut{display:none}
   .controls{position:static;padding:0;border:0;background:none;flex-wrap:wrap}

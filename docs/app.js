@@ -356,12 +356,47 @@ function act(a) {
 }
 document.addEventListener('click', e => {
   const a = e.target.closest('[data-act]'); if (a) return act(a.dataset.act);
-  const gEl = e.target.closest('#map g.el'); if (gEl) return setKey(ELLABEL[gEl.dataset.id], gEl.dataset.id);
+  const gEl = e.target.closest('#map g.el, #zBody g.el'); if (gEl) { closeZoom(); return setKey(ELLABEL[gEl.dataset.id], gEl.dataset.id); }
+  const fig = e.target.closest('#list figure.dia'); if (fig) return zoomFigure(fig);
   const k = e.target.closest('#list [data-k]'); if (k) return setKey(k.dataset.k);
 });
+/* ---------- enlarge: the whole panel (clickable) or one shortcut's diagram ---------- */
+const zoom = $('#zoom');
+function openZoom(title, html, hint) {
+  $('#zTitle').textContent = title; $('#zBody').innerHTML = html; $('#zHint').textContent = hint || '';
+  if (!zoom.open) zoom.showModal();
+}
+function closeZoom() { if (zoom.open) zoom.close(); }
+function zoomPanel() {
+  openZoom(`${DEV.name} panel`, panelSVG(litHL, 'all', { interactive: true, fill: true, badge: 0, dispSub: dispSub(guide()), aria: `${DEV.name} panel: choose a control to list every shortcut that uses it` }),
+    'Choose a control to list every shortcut that uses it. Esc closes.');
+  const f = $('#zBody g.el'); if (f) f.focus({ preventScroll: true });
+}
+function zoomFigure(fig) {
+  const box = fig.closest('.cr, .rw'), t = box && box.querySelector('.t');
+  openZoom(t ? t.textContent.trim() : 'Diagram', fig.innerHTML, 'Esc or click outside to close.');
+}
+$('#zoomBtn').addEventListener('click', zoomPanel);
+$('#zClose').addEventListener('click', closeZoom);
+zoom.addEventListener('click', e => { if (e.target === zoom) closeZoom(); });   /* click on the backdrop */
+$('#zBody').addEventListener('keydown', e => { const gEl = e.target.closest('g.el'); if (gEl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); closeZoom(); setKey(ELLABEL[gEl.dataset.id], gEl.dataset.id); } });
+
+/* ---------- collapsible sidebar (desktop), remembered ---------- */
+function setRail(on, save) {
+  $('.shell').classList.toggle('rail', on);
+  const b = $('#railBtn'); b.setAttribute('aria-pressed', on);
+  const l = on ? 'Show the sidebar' : 'Collapse the sidebar'; b.setAttribute('aria-label', l); b.title = l;
+  if (save) try { localStorage.setItem('nn-rail', on ? '1' : '0'); } catch (_) {}
+  markWraps();
+}
+let railSaved = null; try { railSaved = localStorage.getItem('nn-rail'); } catch (_) {}
+setRail(railSaved === '1');
+$('#railBtn').addEventListener('click', () => setRail(!$('.shell').classList.contains('rail'), true));
+
 $('#map').addEventListener('keydown', e => { const gEl = e.target.closest('g.el'); if (gEl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setKey(ELLABEL[gEl.dataset.id], gEl.dataset.id); } });
 addEventListener('keydown', e => {
   if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $('#q').focus(); }
+  if (e.key === 'Escape' && zoom.open) return;   /* the dialog closes itself */
   if (e.key === 'Escape') { if (S.open && matchMedia('(max-width:959px)').matches) return act('shut'); $('#q').value = ''; S.q = ''; S.key = null; render(); }
 });
 addEventListener('hashchange', () => { readHash(); $('#q').value = S.q; render(); });
